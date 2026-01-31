@@ -48,15 +48,15 @@ function initGame() {
                 });
             });
             
-            // Si pas de compte, forcer vers email
+            // Marquer que le joueur a un compte (pas besoin d'email)
             if (!gameState.player.hasAccount) {
-                setTimeout(() => {
-                    showScreen('email-screen');
-                }, 1000);
-            } else {
-                // Démarrer le temps du jeu
-                startGameTime();
+                gameState.player.hasAccount = true;
+                gameState.player.username = 'Investisseur';
+                saveGameState();
             }
+            
+            // Démarrer le temps du jeu
+            startGameTime();
         }, 1000);
     }, 3000); // L'intro dure 3 secondes
 }
@@ -381,22 +381,7 @@ function updateTopInvestors() {
 
 // Navigation
 function navigateToService(service) {
-    if (!gameState.player.hasAccount && service !== 'email') {
-        alert('Vous devez créer un compte Email pour accéder aux services Gogol.');
-        showScreen('email-screen');
-        return;
-    }
-    
     switch(service) {
-        case 'email':
-            showScreen('email-screen');
-            if (gameState.player.hasAccount) {
-                displayInbox();
-            }
-            break;
-        case 'jeux':
-            showScreen('jeux-screen');
-            break;
         case 'social':
             showScreen('social-screen');
             displayZFeed();
@@ -428,61 +413,6 @@ function showScreen(screenId) {
 
 function goToHome() {
     showScreen('gogol-home');
-}
-
-// Création de compte Email
-function createEmailAccount() {
-    const username = document.getElementById('email-username').value.trim();
-    const password = document.getElementById('email-password').value.trim();
-    
-    if (!username || !password) {
-        alert('Veuillez remplir tous les champs.');
-        return;
-    }
-    
-    gameState.player.username = username;
-    gameState.player.email = `${username}@email.com`;
-    gameState.player.hasAccount = true;
-    
-    document.getElementById('email-login').classList.add('hidden');
-    document.getElementById('email-inbox').classList.remove('hidden');
-    
-    // Message de bienvenue
-    const welcomeEmail = {
-        from: 'support@gogol.com',
-        subject: 'Bienvenue sur Gogol !',
-        content: `Bonjour ${username},\n\nVotre compte Email a été créé avec succès. Vous pouvez maintenant accéder à tous les services Gogol.\n\nBonne chance dans vos investissements !\n\nL'équipe Gogol`,
-        day: gameState.day
-    };
-    
-    displayInbox();
-    
-    // Démarrer le temps du jeu
-    startGameTime();
-    
-    saveGameState();
-    
-    setTimeout(() => {
-        goToHome();
-    }, 2000);
-}
-
-function displayInbox() {
-    const emailList = document.getElementById('email-list');
-    emailList.innerHTML = `
-        <div class="article">
-            <div class="article-header">
-                <div class="article-date">Jour ${gameState.day}</div>
-            </div>
-            <div class="article-title">Bienvenue sur Gogol !</div>
-            <div class="article-content">
-                Bonjour ${gameState.player.username},<br><br>
-                Votre compte Email a été créé avec succès. Vous pouvez maintenant accéder à tous les services Gogol.<br><br>
-                Bonne chance dans vos investissements !<br><br>
-                L'équipe Gogol
-            </div>
-        </div>
-    `;
 }
 
 // Affichage de la bourse
@@ -572,25 +502,54 @@ function drawPriceChart(history) {
     
     const ctx = canvas.getContext('2d');
     canvas.width = canvas.parentElement.clientWidth - 32;
-    canvas.height = 180;
+    canvas.height = 230;
     
     const width = canvas.width;
     const height = canvas.height;
-    const padding = 20;
+    const padding = 40;
     
-    // Fond
-    ctx.fillStyle = '#1e2442';
+    // Fond blanc
+    ctx.fillStyle = '#fafafa';
     ctx.fillRect(0, 0, width, height);
+    
+    // Grille
+    ctx.strokeStyle = '#e8e8e8';
+    ctx.lineWidth = 1;
+    
+    // Lignes horizontales
+    for (let i = 0; i <= 5; i++) {
+        const y = padding + (i / 5) * (height - 2 * padding);
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+    }
+    
+    // Lignes verticales
+    for (let i = 0; i <= 6; i++) {
+        const x = padding + (i / 6) * (width - 2 * padding);
+        ctx.beginPath();
+        ctx.moveTo(x, padding);
+        ctx.lineTo(x, height - padding);
+        ctx.stroke();
+    }
     
     // Trouver min/max
     const minPrice = Math.min(...history);
     const maxPrice = Math.max(...history);
     const priceRange = maxPrice - minPrice || 1;
     
+    // Déterminer la couleur (vert si hausse, rouge si baisse)
+    const firstPrice = history[0];
+    const lastPrice = history[history.length - 1];
+    const isPositive = lastPrice >= firstPrice;
+    const lineColor = isPositive ? '#00C853' : '#D32F2F';
+    const fillColor = isPositive ? 'rgba(0, 200, 83, 0.1)' : 'rgba(211, 47, 47, 0.1)';
+    
     // Dessiner la ligne
     ctx.beginPath();
-    ctx.strokeStyle = '#00d9ff';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2.5;
     
     history.forEach((price, index) => {
         const x = padding + (index / (history.length - 1)) * (width - 2 * padding);
@@ -606,11 +565,20 @@ function drawPriceChart(history) {
     ctx.stroke();
     
     // Remplissage sous la courbe
-    ctx.lineTo(width - padding, height - padding);
-    ctx.lineTo(padding, height - padding);
+    const lastX = padding + (width - 2 * padding);
+    const baselineY = height - padding;
+    ctx.lineTo(lastX, baselineY);
+    ctx.lineTo(padding, baselineY);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 217, 255, 0.1)';
+    ctx.fillStyle = fillColor;
     ctx.fill();
+    
+    // Afficher les valeurs min/max
+    ctx.font = '11px JetBrains Mono';
+    ctx.fillStyle = '#757575';
+    ctx.textAlign = 'right';
+    ctx.fillText(maxPrice.toFixed(2) + '€', padding - 5, padding + 5);
+    ctx.fillText(minPrice.toFixed(2) + '€', padding - 5, height - padding + 5);
 }
 
 function buyStock(companyId) {
@@ -780,23 +748,6 @@ function displayZFeed() {
         
         container.appendChild(postDiv);
     });
-}
-
-// Jeux
-function openGame(gameName) {
-    showScreen('game-window');
-    document.getElementById('game-title').textContent = gameName.charAt(0).toUpperCase() + gameName.slice(1);
-    document.getElementById('game-content').innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 2rem;">
-            <div style="font-size: 4rem;">🎮</div>
-            <div style="font-size: 1.5rem; color: var(--text-secondary);">Le jeu "${gameName}" sera intégré prochainement</div>
-            <div style="color: var(--text-secondary);">Pour l'instant, profitez de la simulation financière !</div>
-        </div>
-    `;
-}
-
-function closeGame() {
-    showScreen('jeux-screen');
 }
 
 // Sauvegarde
