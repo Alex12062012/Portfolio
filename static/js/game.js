@@ -123,17 +123,12 @@ function startGameTime() {
     }, 60000); // 60 secondes = 1 minute
 }
 
-// Mettre à jour le HUD
+// Mettre à jour l'affichage de l'argent
 function updateHUD() {
-    document.getElementById('game-day').textContent = gameState.day;
-    
-    const currentDate = new Date(gameState.startDate);
-    currentDate.setDate(currentDate.getDate() + gameState.day - 1);
-    
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('game-date').textContent = currentDate.toLocaleDateString('fr-FR', options);
-    
-    document.getElementById('player-money').textContent = Math.floor(gameState.player.money);
+    const moneyElement = document.getElementById('player-money');
+    if (moneyElement) {
+        moneyElement.textContent = Math.floor(gameState.player.money);
+    }
 }
 
 // Fluctuations boursières automatiques
