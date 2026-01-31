@@ -467,11 +467,9 @@ function displayStockDetails(companyId) {
             </div>
         </div>
         
-        <div style="margin: 1.5rem 0;">
-            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-success);">
-                ${stockData.current.toFixed(2)}€
-            </div>
-            <div style="font-size: 1.2rem; color: var(--${changeClass === 'positive' ? 'accent-success' : 'accent-danger'});">
+        <div class="stock-price-display">
+            <div class="current-price">${stockData.current.toFixed(2)}€</div>
+            <div class="price-change-display ${changeClass}">
                 ${changeSymbol}${stockData.change.toFixed(2)}€ (${changeSymbol}${stockData.changePercent.toFixed(2)}%)
             </div>
         </div>
@@ -487,8 +485,8 @@ function displayStockDetails(companyId) {
         </div>
     `;
     
-    // Dessiner le graphique simple
-    drawPriceChart(stockData.history);
+    // Dessiner le graphique
+    setTimeout(() => drawPriceChart(stockData.history), 50);
 }
 
 function drawPriceChart(history) {
@@ -496,59 +494,71 @@ function drawPriceChart(history) {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
-    canvas.width = canvas.parentElement.clientWidth - 32;
-    canvas.height = 230;
+    const container = canvas.parentElement;
+    canvas.width = container.clientWidth - 48;
+    canvas.height = 270;
     
     const width = canvas.width;
     const height = canvas.height;
-    const padding = 40;
+    const padding = 50;
     
-    // Fond blanc
-    ctx.fillStyle = '#fafafa';
+    // Fond sombre
+    ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, width, height);
     
-    // Grille
-    ctx.strokeStyle = '#e8e8e8';
+    // Trouver min/max avec marge
+    const minPrice = Math.min(...history);
+    const maxPrice = Math.max(...history);
+    const priceRange = maxPrice - minPrice || 1;
+    const margin = priceRange * 0.1;
+    const adjustedMin = minPrice - margin;
+    const adjustedMax = maxPrice + margin;
+    const adjustedRange = adjustedMax - adjustedMin;
+    
+    // Grille subtile
+    ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth = 1;
     
     // Lignes horizontales
-    for (let i = 0; i <= 5; i++) {
-        const y = padding + (i / 5) * (height - 2 * padding);
+    for (let i = 0; i <= 4; i++) {
+        const y = padding + (i / 4) * (height - 2 * padding);
         ctx.beginPath();
         ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
+        ctx.lineTo(width - padding / 2, y);
         ctx.stroke();
+        
+        // Labels de prix
+        const priceValue = adjustedMax - (i / 4) * adjustedRange;
+        ctx.font = '11px IBM Plex Mono';
+        ctx.fillStyle = '#707070';
+        ctx.textAlign = 'right';
+        ctx.fillText(priceValue.toFixed(2) + '€', padding - 10, y + 4);
     }
     
     // Lignes verticales
-    for (let i = 0; i <= 6; i++) {
-        const x = padding + (i / 6) * (width - 2 * padding);
+    const numVerticalLines = 6;
+    for (let i = 0; i <= numVerticalLines; i++) {
+        const x = padding + (i / numVerticalLines) * (width - padding * 1.5);
         ctx.beginPath();
         ctx.moveTo(x, padding);
         ctx.lineTo(x, height - padding);
         ctx.stroke();
     }
     
-    // Trouver min/max
-    const minPrice = Math.min(...history);
-    const maxPrice = Math.max(...history);
-    const priceRange = maxPrice - minPrice || 1;
-    
-    // Déterminer la couleur (vert si hausse, rouge si baisse)
+    // Déterminer la couleur
     const firstPrice = history[0];
     const lastPrice = history[history.length - 1];
     const isPositive = lastPrice >= firstPrice;
-    const lineColor = isPositive ? '#00C853' : '#D32F2F';
-    const fillColor = isPositive ? 'rgba(0, 200, 83, 0.1)' : 'rgba(211, 47, 47, 0.1)';
     
-    // Dessiner la ligne
+    // Dessiner la courbe principale
     ctx.beginPath();
-    ctx.strokeStyle = lineColor;
+    ctx.strokeStyle = isPositive ? '#10b981' : '#ef4444';
     ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
     
     history.forEach((price, index) => {
-        const x = padding + (index / (history.length - 1)) * (width - 2 * padding);
-        const y = height - padding - ((price - minPrice) / priceRange) * (height - 2 * padding);
+        const x = padding + (index / (history.length - 1)) * (width - padding * 1.5);
+        const y = height - padding - ((price - adjustedMin) / adjustedRange) * (height - 2 * padding);
         
         if (index === 0) {
             ctx.moveTo(x, y);
@@ -559,21 +569,31 @@ function drawPriceChart(history) {
     
     ctx.stroke();
     
-    // Remplissage sous la courbe
-    const lastX = padding + (width - 2 * padding);
+    // Remplissage avec gradient sous la courbe
+    const lastX = padding + (width - padding * 1.5);
     const baselineY = height - padding;
+    
     ctx.lineTo(lastX, baselineY);
     ctx.lineTo(padding, baselineY);
     ctx.closePath();
-    ctx.fillStyle = fillColor;
+    
+    const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+    gradient.addColorStop(0, isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)');
+    gradient.addColorStop(1, isPositive ? 'rgba(16, 185, 129, 0)' : 'rgba(239, 68, 68, 0)');
+    ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Afficher les valeurs min/max
-    ctx.font = '11px JetBrains Mono';
-    ctx.fillStyle = '#757575';
-    ctx.textAlign = 'right';
-    ctx.fillText(maxPrice.toFixed(2) + '€', padding - 5, padding + 5);
-    ctx.fillText(minPrice.toFixed(2) + '€', padding - 5, height - padding + 5);
+    // Point actuel (dernier prix)
+    const lastDataX = padding + (width - padding * 1.5);
+    const lastDataY = height - padding - ((lastPrice - adjustedMin) / adjustedRange) * (height - 2 * padding);
+    
+    ctx.beginPath();
+    ctx.arc(lastDataX, lastDataY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = isPositive ? '#10b981' : '#ef4444';
+    ctx.fill();
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
 function buyStock(companyId) {
