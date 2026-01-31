@@ -16,27 +16,19 @@
     </div>
 
     <div id="app">
-        <!-- Écran de démarrage Gogol -->
+        <!-- Écran de démarrage Portfolio -->
         <div id="gogol-home" class="screen active">
             <div class="gogol-logo">
-                <h1>Gogol</h1>
+                <h1>Portfolio</h1>
             </div>
             <div class="gogol-services">
-                <div class="service-circle" data-service="email">
-                    <div class="service-icon">✉️</div>
-                    <div class="service-name">Email</div>
-                </div>
-                <div class="service-circle" data-service="jeux">
-                    <div class="service-icon">🎮</div>
-                    <div class="service-name">Jeux</div>
+                <div class="service-circle" data-service="bourse">
+                    <div class="service-icon">📈</div>
+                    <div class="service-name">Bourse</div>
                 </div>
                 <div class="service-circle" data-service="social">
                     <div class="service-icon">💬</div>
                     <div class="service-name">Z</div>
-                </div>
-                <div class="service-circle" data-service="bourse">
-                    <div class="service-icon">📈</div>
-                    <div class="service-name">Bourse</div>
                 </div>
                 <div class="service-circle" data-service="fmtv">
                     <div class="service-icon">📺</div>
@@ -50,80 +42,6 @@
                     <div class="service-icon">👥</div>
                     <div class="service-name">Équipe</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Écran Email -->
-        <div id="email-screen" class="screen">
-            <div class="window-header">
-                <button class="back-btn" onclick="goToHome()">← Retour</button>
-                <div class="window-title">
-                    <span class="email-logo">🦷</span> Email
-                </div>
-            </div>
-            <div class="window-content">
-                <div id="email-login" class="email-section">
-                    <h2>Créer votre compte Email</h2>
-                    <p>Pour accéder aux services Gogol, vous devez créer un compte Email.</p>
-                    <input type="text" id="email-username" placeholder="Nom d'utilisateur">
-                    <input type="password" id="email-password" placeholder="Mot de passe">
-                    <button onclick="createEmailAccount()">Créer le compte</button>
-                </div>
-                <div id="email-inbox" class="email-section hidden">
-                    <h2>Boîte de réception</h2>
-                    <div id="email-list"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Écran Jeux -->
-        <div id="jeux-screen" class="screen">
-            <div class="window-header">
-                <button class="back-btn" onclick="goToHome()">← Retour</button>
-                <div class="window-title">Gogol - Recherche Jeux</div>
-            </div>
-            <div class="window-content">
-                <div class="jeux-results">
-                    <div class="jeu-item" onclick="openGame('pokemon')">
-                        <div class="jeu-icon">🎮</div>
-                        <div class="jeu-info">
-                            <h3>Pokemon</h3>
-                            <p>Attrapez-les tous dans cette aventure!</p>
-                        </div>
-                    </div>
-                    <div class="jeu-item" onclick="openGame('karma')">
-                        <div class="jeu-icon">☯️</div>
-                        <div class="jeu-info">
-                            <h3>Karma</h3>
-                            <p>Équilibrez vos actions et leurs conséquences</p>
-                        </div>
-                    </div>
-                    <div class="jeu-item" onclick="openGame('pc-optimiser')">
-                        <div class="jeu-icon">💻</div>
-                        <div class="jeu-info">
-                            <h3>PC Optimiser</h3>
-                            <p>Optimisez votre ordinateur virtuel</p>
-                        </div>
-                    </div>
-                    <div class="jeu-item" onclick="openGame('chess')">
-                        <div class="jeu-icon">♟️</div>
-                        <div class="jeu-info">
-                            <h3>Chess</h3>
-                            <p>Affrontez l'IA aux échecs</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fenêtre de jeu -->
-        <div id="game-window" class="screen">
-            <div class="window-header">
-                <button class="back-btn" onclick="closeGame()">← Retour aux Jeux</button>
-                <div class="window-title" id="game-title">Jeu</div>
-            </div>
-            <div class="window-content" id="game-content">
-                <!-- Le jeu sera chargé ici -->
             </div>
         </div>
 
@@ -206,11 +124,6 @@
             </div>
         </div>
 
-        <!-- HUD - Temps et date -->
-        <div id="game-hud">
-            <div class="hud-time">Jour <span id="game-day">1</span></div>
-            <div class="hud-date" id="game-date"></div>
-        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/data.js') }}"></script>
